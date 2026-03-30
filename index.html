@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>住長納屋シフト</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --line: #dbe4ee;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --ok: #059669;
+      --ok-soft: #d1fae5;
+      --warn: #ea580c;
+      --warn-soft: #ffedd5;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff, #eef4ff);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .hero-date {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(44px, 9vw, 110px);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      margin: 0;
+      text-shadow: 0 4px 14px rgba(37, 99, 235, 0.10);
+    }
+
+    .hero-sub {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 18px 10px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .card-body {
+      padding: 16px 18px 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      min-height: 42px;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .btn.soft {
+      background: #f8fafc;
+    }
+    .btn.warn {
+      background: var(--danger-soft);
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    .btn.ok {
+      background: var(--ok-soft);
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .status.dirty {
+      background: var(--warn-soft);
+      color: #9a3412;
+    }
+
+    .status.clean {
+      background: var(--ok-soft);
+      color: #065f46;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .weekday {
+      background: #e2e8f0;
+      color: #334155;
+      border-radius: 14px;
+      text-align: center;
+      padding: 10px 4px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .day {
+      min-height: 128px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px;
+      background: white;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .day:hover { box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .day.other { background: #f8fafc; color: #94a3b8; }
+    .day.today { border-color: #60a5fa; box-shadow: inset 0 0 0 2px #bfdbfe; }
+
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .today-badge {
+      font-size: 10px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .shift-badge {
+      border-radius: 14px;
+      color: white;
+      padding: 7px 8px;
+      font-size: 11px;
+      margin-bottom: 6px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+
+    .shift-badge .name { font-weight: 800; }
+    .tiny-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stack { display: grid; gap: 16px; }
+    .list { display: grid; gap: 10px; }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: white;
+    }
+
+    .item.confirmed {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: white;
+      min-height: 44px;
+    }
+
+    .textarea { min-height: 90px; resize: vertical; }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .color-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .color-btn.active { border-color: #0f172a; }
+
+    .note-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .line-preview {
+      background: #f7fff8;
+      border: 1px solid #bbf7d0;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .line-preview pre {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 8px; }
+      .hero { padding: 16px; }
+      .calendar { gap: 6px; }
+      .weekday { font-size: 11px; padding: 8px 2px; }
+      .day { min-height: 102px; padding: 8px; }
+      .two { grid-template-columns: 1fr; }
+      .btn { padding: 10px 12px; font-size: 13px; }
+      .card-body, .card-header { padding-left: 14px; padding-right: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="hero-date" id="heroDate"></div>
+      <h1 class="hero-title">住長納屋シフト</h1>
+      <div class="hero-sub">下書き保存・確定通知・複数日まとめ追加・従業員管理つき</div>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-header">
+          <div class="toolbar">
+            <div class="group">
+              <button class="btn soft" id="prevBtn">←</button>
+              <div id="monthTitle" style="font-weight:800;font-size:20px;"></div>
+              <button class="btn soft" id="nextBtn">→</button>
+              <button class="btn soft" id="todayBtn">今日へ戻る</button>
+            </div>
+            <div class="group">
+              <button class="btn" id="monthViewBtn">月表示</button>
+              <button class="btn" id="weekViewBtn">週表示</button>
+              <button class="btn" id="managerBtn">管理側</button>
+              <button class="btn" id="employeeBtn">従業員側</button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="group">
+              <div class="status" id="draftStatus"></div>
+              <div class="tiny-note">編集中は通知されません。確定時にまとめて通知します。</div>
+            </div>
+            <div class="group" id="employeeTools">
+              <select class="select" id="employeeFilter" style="width:140px;"></select>
+              <button class="btn" id="mineBtn">自分だけ</button>
+              <button class="btn" id="allBtn">全員表示</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="legend" id="legend"></div>
+          <div class="calendar" id="calendar"></div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">LINE通知プレビュー</h2></div>
+          <div class="card-body">
+            <div class="note-box">
+              <div style="font-weight:800; margin-bottom:6px;">送信予定</div>
+              <div id="summaryTitle" style="font-weight:800; font-size:18px;"></div>
+              <div class="list" id="summaryItems" style="margin-top:10px;"></div>
+            </div>
+            <div class="line-preview" style="margin-top:12px;">
+              <div style="font-weight:800; color:#15803d;">LINEで送る文面イメージ</div>
+              <pre id="linePreview"></pre>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <button class="btn primary" id="confirmBtn">確定してまとめ通知</button>
+              <button class="btn" id="discardBtn">下書きを破棄</button>
+              <button class="btn ok" id="copyBtn">文面をコピー</button>
+            </div>
+            <div id="lastNotificationWrap" style="margin-top:14px;"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title" id="draftListTitle"></h2></div>
+          <div class="card-body"><div class="list" id="draftList"></div></div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title" id="confirmedListTitle"></h2></div>
+          <div class="card-body"><div class="list" id="confirmedList"></div></div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title" id="singleFormTitle">シフト追加</h2></div>
+          <div class="card-body controls">
+            <div class="field">
+              <label class="label">従業員</label>
+              <select class="select" id="formEmployee"></select>
+            </div>
+            <div class="field">
+              <label class="label">日付</label>
+              <input class="input" type="date" id="formDate" />
+            </div>
+            <div class="two">
+              <div class="field">
+                <label class="label">開始</label>
+                <input class="input" type="time" id="formStart" />
+              </div>
+              <div class="field">
+                <label class="label">終了</label>
+                <input class="input" type="time" id="formEnd" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">メモ</label>
+              <input class="input" id="formNote" placeholder="作業内容など" />
+            </div>
+            <div class="row">
+              <button class="btn primary" id="saveShiftBtn">下書きに追加</button>
+              <button class="btn hidden" id="cancelEditBtn">編集をやめる</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">複数日まとめ追加</h2></div>
+          <div class="card-body controls">
+            <div class="field">
+              <label class="label">従業員</label>
+              <select class="select" id="bulkEmployee"></select>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label class="label">開始日</label>
+                <input class="input" type="date" id="bulkStartDate" />
+              </div>
+              <div class="field">
+                <label class="label">終了日</label>
+                <input class="input" type="date" id="bulkEndDate" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">入れる曜日</label>
+              <div class="row" id="weekdayButtons"></div>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label class="label">開始</label>
+                <input class="input" type="time" id="bulkStart" />
+              </div>
+              <div class="field">
+                <label class="label">終了</label>
+                <input class="input" type="time" id="bulkEnd" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">メモ</label>
+              <input class="input" id="bulkNote" placeholder="作業内容など" />
+            </div>
+            <button class="btn primary" id="bulkAddBtn">まとめて下書き追加</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">従業員管理</h2></div>
+          <div class="card-body controls">
+            <div class="note-box">従業員の追加・名前変更・色変更・削除に対応しています。シフトが入っている従業員は削除できません。</div>
+            <div class="field">
+              <label class="label">新しい従業員名</label>
+              <input class="input" id="newEmployeeName" placeholder="従業員名" />
+            </div>
+            <div class="field">
+              <label class="label">初期カラー</label>
+              <div class="color-row" id="newEmployeeColors"></div>
+            </div>
+            <button class="btn primary" id="addEmployeeBtn">従業員を追加</button>
+            <div class="list" id="employeeManagerList"></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const COLORS = [
+      '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
+      '#14b8a6', '#0ea5e9', '#3b82f6', '#8b5cf6', '#ec4899'
+    ];
+
+    const jpWeek = ['日', '月', '火', '水', '木', '金', '土'];
+    const storageKey = 'sumicho-shift-html-v1';
+
+    const today = new Date('2026-03-30T09:00:00');
+
+    const defaultState = {
+      viewMode: 'month',
+      roleMode: 'manager',
+      employeeViewMode: 'mine',
+      selectedEmployeeId: 'e1',
+      currentDate: '2026-03-30',
+      selectedDate: '2026-03-30',
+      editingShiftId: null,
+      newEmployeeColor: COLORS[0],
+      employees: [
+        { id: 'e1', name: '田中', color: COLORS[0] },
+        { id: 'e2', name: '山本', color: COLORS[6] },
+        { id: 'e3', name: '中村', color: COLORS[8] },
+        { id: 'e4', name: '松本', color: COLORS[9] },
+      ],
+      confirmedShifts: [
+        { id: 's1', employeeId: 'e1', date: '2026-03-30', start: '06:00', end: '12:00', note: '海苔網確認' },
+        { id: 's2', employeeId: 'e2', date: '2026-03-30', start: '08:00', end: '14:00', note: '出荷補助' },
+        { id: 's3', employeeId: 'e3', date: '2026-03-31', start: '06:00', end: '11:00', note: '養殖チェック' },
+        { id: 's4', employeeId: 'e4', date: '2026-04-01', start: '09:00', end: '15:00', note: '作業場' },
+        { id: 's5', employeeId: 'e1', date: '2026-04-02', start: '05:30', end: '10:30', note: '早朝対応' },
+      ],
+      draftShifts: [
+        { id: 's1', employeeId: 'e1', date: '2026-03-30', start: '06:00', end: '12:00', note: '海苔網確認' },
+        { id: 's2', employeeId: 'e2', date: '2026-03-30', start: '08:00', end: '14:00', note: '出荷補助' },
+        { id: 's3', employeeId: 'e3', date: '2026-03-31', start: '06:00', end: '11:00', note: '養殖チェック' },
+        { id: 's4', employeeId: 'e4', date: '2026-04-01', start: '09:00', end: '15:00', note: '作業場' },
+        { id: 's5', employeeId: 'e1', date: '2026-04-02', start: '05:30', end: '10:30', note: '早朝対応' },
+      ],
+      lastNotification: null,
+      form: {
+        employeeId: 'e1',
+        date: '2026-03-30',
+        start: '06:00',
+        end: '12:00',
+        note: ''
+      },
+      bulkForm: {
+        employeeId: 'e1',
+        startDate: '2026-03-30',
+        endDate: '2026-04-03',
+        weekdays: [1,2,3,4,5],
+        start: '06:00',
+        end: '12:00',
+        note: ''
+      }
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        return saved ? { ...defaultState, ...JSON.parse(saved) } : structuredClone(defaultState);
+      } catch (e) {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function structuredClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function formatJPDate(dateStr) {
+      const d = new Date(dateStr + 'T09:00:00');
+      return `${d.getMonth()+1}月${d.getDate()}日（${jpWeek[d.getDay()]}）`;
+    }
+
+    function toDateString(date) {
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
+
+    function startOfWeek(date) {
+      const d = new Date(date);
+      d.setDate(d.getDate() - d.getDay());
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    function addDays(date, n) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+
+    function startOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+
+    function endOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth()+1, 0);
+    }
+
+    function getMonthGrid(date) {
+      const start = startOfWeek(startOfMonth(date));
+      const end = addDays(startOfWeek(endOfMonth(date)), 6);
+      const days = [];
+      let cursor = new Date(start);
+      while (cursor <= end) {
+        days.push(new Date(cursor));
+        cursor = addDays(cursor, 1);
+      }
+      return days;
+    }
+
+    function getWeekGrid(date) {
+      const start = startOfWeek(date);
+      return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    }
+
+    function employeesMap() {
+      return new Map(state.employees.map(e => [e.id, e]));
+    }
+
+    function monthTitle(dateStr) {
+      const d = new Date(dateStr + 'T09:00:00');
+      return `${d.getFullYear()}年${d.getMonth()+1}月`;
+    }
+
+    function shiftsToMap(shifts) {
+      const map = new Map();
+      shifts.forEach(shift => {
+        const list = map.get(shift.date) || [];
+        list.push(shift);
+        list.sort((a,b) => a.start.localeCompare(b.start));
+        map.set(shift.date, list);
+      });
+      return map;
+    }
+
+    function sameState(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function isDirty() {
+      return !sameState(state.draftShifts, state.confirmedShifts);
+    }
+
+    function buildChangeSummary(before, after) {
+      const mapEmployees = employeesMap();
+      const beforeMap = new Map(before.map(s => [s.id, s]));
+      const afterMap = new Map(after.map(s => [s.id, s]));
+      const items = [];
+
+      afterMap.forEach((newShift, id) => {
+        const oldShift = beforeMap.get(id);
+        if (!oldShift) {
+          items.push({ type: '追加', message: `${newShift.date} ${newShift.start}-${newShift.end} ${mapEmployees.get(newShift.employeeId)?.name || '-'} を追加` });
+          return;
+        }
+        if (JSON.stringify(oldShift) !== JSON.stringify(newShift)) {
+          items.push({ type: '変更', message: `${oldShift.date} ${oldShift.start}-${oldShift.end} ${mapEmployees.get(oldShift.employeeId)?.name || '-'} → ${newShift.date} ${newShift.start}-${newShift.end} ${mapEmployees.get(newShift.employeeId)?.name || '-'}` });
+        }
+      });
+
+      beforeMap.forEach((oldShift, id) => {
+        if (!afterMap.has(id)) {
+          items.push({ type: '削除', message: `${oldShift.date} ${oldShift.start}-${oldShift.end} ${mapEmployees.get(oldShift.employeeId)?.name || '-'} を削除` });
+        }
+      });
+
+      return {
+        count: items.length,
+        title: items.length === 0 ? '変更なし' : `${items.length}件の変更をまとめて通知`,
+        items
+      };
+    }
+
+    function buildLineText(summary) {
+      if (!summary || summary.count === 0) return '【住長納屋シフト】\n変更はありません';
+      return ['【住長納屋シフト】', summary.title, ...summary.items.map(i => `・${i.message}`)].join('\n');
+    }
+
+    function visibleShifts() {
+      if (state.roleMode === 'manager') return state.draftShifts;
+      if (state.employeeViewMode === 'all') return state.draftShifts;
+      return state.draftShifts.filter(s => s.employeeId === state.selectedEmployeeId);
+    }
+
+    function selectedDraftShifts() {
+      return (shiftsToMap(visibleShifts()).get(state.selectedDate) || []);
+    }
+
+    function selectedConfirmedShifts() {
+      return (shiftsToMap(state.confirmedShifts).get(state.selectedDate) || []);
+    }
+
+    function setFormValues() {
+      document.getElementById('formEmployee').value = state.form.employeeId;
+      document.getElementById('formDate').value = state.form.date;
+      document.getElementById('formStart').value = state.form.start;
+      document.getElementById('formEnd').value = state.form.end;
+      document.getElementById('formNote').value = state.form.note;
+
+      document.getElementById('bulkEmployee').value = state.bulkForm.employeeId;
+      document.getElementById('bulkStartDate').value = state.bulkForm.startDate;
+      document.getElementById('bulkEndDate').value = state.bulkForm.endDate;
+      document.getElementById('bulkStart').value = state.bulkForm.start;
+      document.getElementById('bulkEnd').value = state.bulkForm.end;
+      document.getElementById('bulkNote').value = state.bulkForm.note;
+      document.getElementById('employeeFilter').value = state.selectedEmployeeId;
+    }
+
+    function renderSelectors() {
+      const selectIds = ['formEmployee', 'bulkEmployee', 'employeeFilter'];
+      selectIds.forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      });
+    }
+
+    function renderLegend() {
+      const wrap = document.getElementById('legend');
+      wrap.innerHTML = state.employees.map(e => `
+        <div class="legend-item">
+          <span class="dot" style="background:${e.color}"></span>
+          <span>${e.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderWeekdayButtons() {
+      const wrap = document.getElementById('weekdayButtons');
+      wrap.innerHTML = jpWeek.map((label, index) => {
+        const active = state.bulkForm.weekdays.includes(index);
+        return `<button class="btn ${active ? 'primary' : ''}" data-weekday="${index}">${label}</button>`;
+      }).join('');
+      wrap.querySelectorAll('[data-weekday]').forEach(btn => {
+        btn.onclick = () => {
+          const d = Number(btn.dataset.weekday);
+          if (state.bulkForm.weekdays.includes(d)) {
+            state.bulkForm.weekdays = state.bulkForm.weekdays.filter(x => x !== d);
+          } else {
+            state.bulkForm.weekdays.push(d);
+            state.bulkForm.weekdays.sort();
+          }
+          saveState();
+          render();
+        };
+      });
+    }
+
+    function renderCalendar() {
+      const wrap = document.getElementById('calendar');
+      const date = new Date(state.currentDate + 'T09:00:00');
+      const dates = state.viewMode === 'month' ? getMonthGrid(date) : getWeekGrid(date);
+      const map = shiftsToMap(visibleShifts());
+
+      wrap.innerHTML = jpWeek.map(d => `<div class="weekday">${d}</div>`).join('') + dates.map(d => {
+        const key = toDateString(d);
+        const isToday = key === toDateString(today);
+        const isOther = d.getMonth() !== date.getMonth() && state.viewMode === 'month';
+        const items = (map.get(key) || []).slice(0,3).map(shift => {
+          const employee = employeesMap().get(shift.employeeId);
+          return `<div class="shift-badge" style="background:${employee?.color || '#64748b'}"><div class="name">${employee?.name || '-'}</div><div>${shift.start} - ${shift.end}</div></div>`;
+        }).join('');
+        const more = (map.get(key) || []).length > 3 ? `<div class="tiny-note">+${(map.get(key) || []).length - 3}件</div>` : '';
+        return `
+          <div class="day ${isToday ? 'today' : ''} ${isOther ? 'other' : ''}" data-date="${key}">
+            <div class="day-head">
+              <span>${d.getDate()}（${jpWeek[d.getDay()]}）</span>
+              ${isToday ? '<span class="today-badge">今日</span>' : ''}
+            </div>
+            ${items}
+            ${more}
+          </div>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('.day').forEach(el => {
+        el.onclick = () => {
+          state.selectedDate = el.dataset.date;
+          state.form.date = el.dataset.date;
+          saveState();
+          render();
+        };
+      });
+    }
+
+    function renderDraftList() {
+      document.getElementById('draftListTitle').textContent = `${state.selectedDate} の下書きシフト`;
+      const wrap = document.getElementById('draftList');
+      const items = selectedDraftShifts();
+      if (!items.length) {
+        wrap.innerHTML = `<div class="item"><div class="muted">この日の下書きシフトはありません</div></div>`;
+        return;
+      }
+      wrap.innerHTML = items.map(shift => {
+        const employee = employeesMap().get(shift.employeeId);
+        return `
+          <div class="item">
+            <div class="item-head">
+              <div class="row" style="align-items:center;">
+                <span class="dot" style="background:${employee?.color || '#64748b'}"></span>
+                <strong>${employee?.name || '-'}</strong>
+              </div>
+              <div class="tiny-note">${shift.start} - ${shift.end}</div>
+            </div>
+            ${shift.note ? `<div class="tiny-note" style="margin-bottom:10px;">${shift.note}</div>` : ''}
+            ${state.roleMode === 'manager' ? `
+              <div class="row">
+                <button class="btn" data-edit-draft="${shift.id}">編集</button>
+                <button class="btn warn" data-delete-draft="${shift.id}">削除</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('[data-edit-draft]').forEach(btn => btn.onclick = () => startEditDraft(btn.dataset.editDraft));
+      wrap.querySelectorAll('[data-delete-draft]').forEach(btn => btn.onclick = () => deleteDraftShift(btn.dataset.deleteDraft));
+    }
+
+    function renderConfirmedList() {
+      document.getElementById('confirmedListTitle').textContent = `${state.selectedDate} の確定済みシフト`;
+      const wrap = document.getElementById('confirmedList');
+      const items = selectedConfirmedShifts();
+      if (!items.length) {
+        wrap.innerHTML = `<div class="item confirmed"><div class="muted">この日の確定済みシフトはありません</div></div>`;
+        return;
+      }
+      wrap.innerHTML = items.map(shift => {
+        const employee = employeesMap().get(shift.employeeId);
+        return `
+          <div class="item confirmed">
+            <div class="item-head">
+              <div class="row" style="align-items:center;">
+                <span class="dot" style="background:${employee?.color || '#64748b'}"></span>
+                <strong>${employee?.name || '-'}</strong>
+              </div>
+              <div class="tiny-note">${shift.start} - ${shift.end}</div>
+            </div>
+            ${shift.note ? `<div class="tiny-note" style="margin-bottom:10px;">${shift.note}</div>` : ''}
+            ${state.roleMode === 'manager' ? `
+              <div class="row">
+                <button class="btn" data-edit-confirmed="${shift.id}">確定分を編集</button>
+                <button class="btn warn" data-delete-confirmed="${shift.id}">確定分を削除</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('[data-edit-confirmed]').forEach(btn => btn.onclick = () => editConfirmedShift(btn.dataset.editConfirmed));
+      wrap.querySelectorAll('[data-delete-confirmed]').forEach(btn => btn.onclick = () => deleteConfirmedShift(btn.dataset.deleteConfirmed));
+    }
+
+    function renderSummary() {
+      const summary = buildChangeSummary(state.confirmedShifts, state.draftShifts);
+      document.getElementById('summaryTitle').textContent = summary.title;
+      document.getElementById('linePreview').textContent = buildLineText(summary);
+      const wrap = document.getElementById('summaryItems');
+      wrap.innerHTML = summary.items.length ? summary.items.slice(0, 5).map(item => `
+        <div class="item">
+          <div style="font-weight:800; margin-bottom:4px;">${item.type}</div>
+          <div class="tiny-note">${item.message}</div>
+        </div>
+      `).join('') : '<div class="tiny-note" style="margin-top:10px;">今のところ通知する変更はありません</div>';
+
+      const last = state.lastNotification;
+      const lastWrap = document.getElementById('lastNotificationWrap');
+      if (!last) {
+        lastWrap.innerHTML = `<div class="note-box">まだ通知は送っていません</div>`;
+      } else {
+        lastWrap.innerHTML = `
+          <div class="line-preview">
+            <div style="font-weight:800; color:#15803d;">最後に送った通知</div>
+            <div class="tiny-note" style="margin-top:4px;">${last.sentAt}</div>
+            <pre>${last.lineText}</pre>
+          </div>
+        `;
+      }
+    }
+
+    function renderEmployeeManager() {
+      const colorWrap = document.getElementById('newEmployeeColors');
+      colorWrap.innerHTML = COLORS.map(color => `<button class="color-btn ${state.newEmployeeColor === color ? 'active' : ''}" data-new-color="${color}" style="background:${color}"></button>`).join('');
+      colorWrap.querySelectorAll('[data-new-color]').forEach(btn => btn.onclick = () => {
+        state.newEmployeeColor = btn.dataset.newColor;
+        saveState();
+        renderEmployeeManager();
+      });
+
+      const wrap = document.getElementById('employeeManagerList');
+      wrap.innerHTML = state.employees.map(employee => {
+        const hasShift = state.draftShifts.some(s => s.employeeId === employee.id);
+        return `
+          <div class="item">
+            <div class="field">
+              <label class="label">名前</label>
+              <input class="input" value="${employee.name}" data-employee-name="${employee.id}" />
+            </div>
+            <div class="field">
+              <label class="label">カラー</label>
+              <div class="color-row">
+                ${COLORS.map(color => `<button class="color-btn ${employee.color === color ? 'active' : ''}" data-employee-color="${employee.id}" data-color="${color}" style="background:${color}"></button>`).join('')}
+              </div>
+            </div>
+            <div class="row" style="justify-content:space-between; align-items:center;">
+              <div class="tiny-note">${hasShift ? 'この従業員にはシフトあり' : 'シフト未登録'}</div>
+              <button class="btn warn" data-delete-employee="${employee.id}" ${hasShift || state.employees.length === 1 ? 'disabled' : ''}>削除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('[data-employee-name]').forEach(input => input.onchange = () => {
+        const emp = state.employees.find(e => e.id === input.dataset.employeeName);
+        if (emp) emp.name = input.value.trim() || emp.name;
+        saveState();
+        render();
+      });
+      wrap.querySelectorAll('[data-employee-color]').forEach(btn => btn.onclick = () => {
+        const emp = state.employees.find(e => e.id === btn.dataset.employeeColor);
+        if (emp) emp.color = btn.dataset.color;
+        saveState();
+        render();
+      });
+      wrap.querySelectorAll('[data-delete-employee]').forEach(btn => btn.onclick = () => deleteEmployee(btn.dataset.deleteEmployee));
+    }
+
+    function renderHeaderState() {
+      document.getElementById('heroDate').textContent = formatJPDate(state.selectedDate);
+      document.getElementById('monthTitle').textContent = monthTitle(state.currentDate);
+      const status = document.getElementById('draftStatus');
+      status.className = `status ${isDirty() ? 'dirty' : 'clean'}`;
+      status.textContent = isDirty() ? '下書き編集中' : '確定済み';
+
+      document.getElementById('monthViewBtn').className = `btn ${state.viewMode === 'month' ? 'primary' : ''}`;
+      document.getElementById('weekViewBtn').className = `btn ${state.viewMode === 'week' ? 'primary' : ''}`;
+      document.getElementById('managerBtn').className = `btn ${state.roleMode === 'manager' ? 'primary' : ''}`;
+      document.getElementById('employeeBtn').className = `btn ${state.roleMode === 'employee' ? 'primary' : ''}`;
+      document.getElementById('mineBtn').className = `btn ${state.employeeViewMode === 'mine' ? 'primary' : ''}`;
+      document.getElementById('allBtn').className = `btn ${state.employeeViewMode === 'all' ? 'primary' : ''}`;
+      document.getElementById('employeeTools').style.display = state.roleMode === 'employee' ? 'flex' : 'none';
+
+      document.getElementById('singleFormTitle').textContent = state.editingShiftId ? 'シフト編集' : 'シフト追加';
+      document.getElementById('saveShiftBtn').textContent = state.editingShiftId ? '下書きを更新' : '下書きに追加';
+      document.getElementById('cancelEditBtn').classList.toggle('hidden', !state.editingShiftId);
+    }
+
+    function render() {
+      renderSelectors();
+      setFormValues();
+      renderHeaderState();
+      renderLegend();
+      renderWeekdayButtons();
+      renderCalendar();
+      renderDraftList();
+      renderConfirmedList();
+      renderSummary();
+      renderEmployeeManager();
+      saveState();
+    }
+
+    function startEditDraft(shiftId) {
+      const shift = state.draftShifts.find(s => s.id === shiftId);
+      if (!shift) return;
+      state.editingShiftId = shift.id;
+      state.form = { ...shift };
+      state.selectedDate = shift.date;
+      state.currentDate = shift.date;
+      render();
+    }
+
+    function deleteDraftShift(shiftId) {
+      state.draftShifts = state.draftShifts.filter(s => s.id !== shiftId);
+      if (state.editingShiftId === shiftId) cancelEdit();
+      render();
+    }
+
+    function editConfirmedShift(shiftId) {
+      const shift = state.confirmedShifts.find(s => s.id === shiftId);
+      if (!shift) return;
+      if (!state.draftShifts.some(s => s.id === shift.id)) state.draftShifts.push({ ...shift });
+      state.editingShiftId = shift.id;
+      state.form = { ...shift };
+      state.selectedDate = shift.date;
+      state.currentDate = shift.date;
+      render();
+    }
+
+    function deleteConfirmedShift(shiftId) {
+      state.draftShifts = state.draftShifts.filter(s => s.id !== shiftId);
+      if (state.editingShiftId === shiftId) cancelEdit();
+      render();
+    }
+
+    function cancelEdit() {
+      state.editingShiftId = null;
+      state.form = {
+        employeeId: state.selectedEmployeeId || state.employees[0]?.id,
+        date: state.selectedDate,
+        start: '06:00',
+        end: '12:00',
+        note: ''
+      };
+      render();
+    }
+
+    function saveShift() {
+      state.form.employeeId = document.getElementById('formEmployee').value;
+      state.form.date = document.getElementById('formDate').value;
+      state.form.start = document.getElementById('formStart').value;
+      state.form.end = document.getElementById('formEnd').value;
+      state.form.note = document.getElementById('formNote').value;
+
+      if (!state.form.employeeId || !state.form.date || !state.form.start || !state.form.end) return;
+
+      if (state.editingShiftId) {
+        state.draftShifts = state.draftShifts.map(s => s.id === state.editingShiftId ? { ...s, ...state.form } : s);
+        state.editingShiftId = null;
+      } else {
+        state.draftShifts.push({
+          id: `s${Date.now()}`,
+          employeeId: state.form.employeeId,
+          date: state.form.date,
+          start: state.form.start,
+          end: state.form.end,
+          note: state.form.note
+        });
+      }
+
+      state.selectedDate = state.form.date;
+      state.currentDate = state.form.date;
+      state.form.note = '';
+      render();
+    }
+
+    function addBulkShifts() {
+      state.bulkForm.employeeId = document.getElementById('bulkEmployee').value;
+      state.bulkForm.startDate = document.getElementById('bulkStartDate').value;
+      state.bulkForm.endDate = document.getElementById('bulkEndDate').value;
+      state.bulkForm.start = document.getElementById('bulkStart').value;
+      state.bulkForm.end = document.getElementById('bulkEnd').value;
+      state.bulkForm.note = document.getElementById('bulkNote').value;
+
+      const start = new Date(state.bulkForm.startDate + 'T00:00:00');
+      const end = new Date(state.bulkForm.endDate + 'T00:00:00');
+      if (start > end || state.bulkForm.weekdays.length === 0) return;
+
+      const created = [];
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        if (state.bulkForm.weekdays.includes(cursor.getDay())) {
+          const date = toDateString(cursor);
+          created.push({
+            id: `s${Date.now()}-${date}-${created.length}`,
+            employeeId: state.bulkForm.employeeId,
+            date,
+            start: state.bulkForm.start,
+            end: state.bulkForm.end,
+            note: state.bulkForm.note
+          });
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      state.draftShifts.push(...created);
+      state.selectedDate = state.bulkForm.startDate;
+      state.currentDate = state.bulkForm.startDate;
+      render();
+    }
+
+    function confirmAndNotify() {
+      const summary = buildChangeSummary(state.confirmedShifts, state.draftShifts);
+      if (summary.count === 0) return;
+      state.confirmedShifts = structuredClone(state.draftShifts);
+      state.lastNotification = {
+        sentAt: new Date().toLocaleString('ja-JP'),
+        lineText: buildLineText(summary)
+      };
+      render();
+      alert('確定してまとめ通知しました');
+    }
+
+    function discardDraft() {
+      state.draftShifts = structuredClone(state.confirmedShifts);
+      cancelEdit();
+      render();
+    }
+
+    async function copyLineText() {
+      try {
+        await navigator.clipboard.writeText(document.getElementById('linePreview').textContent);
+        alert('LINE文面をコピーしました');
+      } catch (e) {
+        alert('コピーに失敗しました');
+      }
+    }
+
+    function addEmployee() {
+      const input = document.getElementById('newEmployeeName');
+      const name = input.value.trim();
+      if (!name) return;
+      const id = `e${Date.now()}`;
+      state.employees.push({ id, name, color: state.newEmployeeColor });
+      state.selectedEmployeeId = id;
+      state.form.employeeId = id;
+      state.bulkForm.employeeId = id;
+      input.value = '';
+      render();
+    }
+
+    function deleteEmployee(employeeId) {
+      if (state.draftShifts.some(s => s.employeeId === employeeId)) return;
+      if (state.employees.length <= 1) return;
+      state.employees = state.employees.filter(e => e.id !== employeeId);
+      if (state.selectedEmployeeId === employeeId) state.selectedEmployeeId = state.employees[0].id;
+      render();
+    }
+
+    function moveCalendar(direction) {
+      const d = new Date(state.currentDate + 'T09:00:00');
+      if (state.viewMode === 'month') d.setMonth(d.getMonth() + direction);
+      else d.setDate(d.getDate() + 7 * direction);
+      state.currentDate = toDateString(d);
+      render();
+    }
+
+    function bindEvents() {
+      document.getElementById('prevBtn').onclick = () => moveCalendar(-1);
+      document.getElementById('nextBtn').onclick = () => moveCalendar(1);
+      document.getElementById('todayBtn').onclick = () => {
+        state.currentDate = toDateString(today);
+        state.selectedDate = toDateString(today);
+        state.form.date = toDateString(today);
+        render();
+      };
+
+      document.getElementById('monthViewBtn').onclick = () => { state.viewMode = 'month'; render(); };
+      document.getElementById('weekViewBtn').onclick = () => { state.viewMode = 'week'; render(); };
+      document.getElementById('managerBtn').onclick = () => { state.roleMode = 'manager'; render(); };
+      document.getElementById('employeeBtn').onclick = () => { state.roleMode = 'employee'; render(); };
+      document.getElementById('mineBtn').onclick = () => { state.employeeViewMode = 'mine'; render(); };
+      document.getElementById('allBtn').onclick = () => { state.employeeViewMode = 'all'; render(); };
+      document.getElementById('employeeFilter').onchange = (e) => { state.selectedEmployeeId = e.target.value; render(); };
+
+      document.getElementById('saveShiftBtn').onclick = saveShift;
+      document.getElementById('cancelEditBtn').onclick = cancelEdit;
+      document.getElementById('bulkAddBtn').onclick = addBulkShifts;
+      document.getElementById('confirmBtn').onclick = confirmAndNotify;
+      document.getElementById('discardBtn').onclick = discardDraft;
+      document.getElementById('copyBtn').onclick = copyLineText;
+      document.getElementById('addEmployeeBtn').onclick = addEmployee;
+
+      document.getElementById('formEmployee').onchange = (e) => state.form.employeeId = e.target.value;
+      document.getElementById('formDate').onchange = (e) => state.form.date = e.target.value;
+      document.getElementById('formStart').onchange = (e) => state.form.start = e.target.value;
+      document.getElementById('formEnd').onchange = (e) => state.form.end = e.target.value;
+      document.getElementById('formNote').oninput = (e) => state.form.note = e.target.value;
+
+      document.getElementById('bulkEmployee').onchange = (e) => state.bulkForm.employeeId = e.target.value;
+      document.getElementById('bulkStartDate').onchange = (e) => state.bulkForm.startDate = e.target.value;
+      document.getElementById('bulkEndDate').onchange = (e) => state.bulkForm.endDate = e.target.value;
+      document.getElementById('bulkStart').onchange = (e) => state.bulkForm.start = e.target.value;
+      document.getElementById('bulkEnd').onchange = (e) => state.bulkForm.end = e.target.value;
+      document.getElementById('bulkNote').oninput = (e) => state.bulkForm.note = e.target.value;
+    }
+
+    bindEvents();
+    render();
+  </script>
+</body>
+</html>
