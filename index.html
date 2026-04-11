@@ -1,12 +1,161 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>シフトアプリ</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/index.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海苔データ入力フォーム</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background:#f5f7fb;
+  padding:15px;
+}
+.card{
+  background:#fff;
+  border-radius:15px;
+  padding:15px;
+  margin-bottom:15px;
+}
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#4a7cff;
+  color:#fff;
+  font-size:16px;
+}
+.place{
+  border:1px solid #ddd;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
+.summary{
+  border:2px solid #4a7cff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>海苔データ入力</h2>
+
+<label>日付</label>
+<input type="date" id="date">
+
+<label>会社</label>
+<input value="住長" disabled>
+
+<h3>場所ごとの入力</h3>
+<div id="places"></div>
+
+<button onclick="addPlace()">場所追加</button>
+
+<label>出来上がり枚数</label>
+<input type="number" id="finished">
+
+<button onclick="calc()">自動計算</button>
+
+<div>1枚あたり：<span id="per">-</span></div>
+
+<label>備考</label>
+<textarea id="memo"></textarea>
+
+<button onclick="makeSummary()">まとめ作成</button>
+</div>
+
+<div class="card summary">
+<h2>送信用</h2>
+
+<div>日付：<span id="s_date"></span></div>
+<div>会社：住長</div>
+<div>場所内訳：<div id="s_places"></div></div>
+<div>合計：<span id="s_total"></span></div>
+<div>出来上がり：<span id="s_finished"></span></div>
+<div>1枚あたり：<span id="s_per"></span></div>
+<div>備考：<span id="s_memo"></span></div>
+
+</div>
+
+<script>
+
+function addPlace(name="",count="",day=""){
+  const div=document.createElement("div");
+  div.className="place";
+
+  div.innerHTML=`
+  <input class="name" placeholder="場所名" value="${name}">
+  <input class="count" type="number" placeholder="網枚数" value="${count}">
+  <input class="day" type="number" placeholder="何日目" value="${day}">
+  <button onclick="this.parentElement.remove()">削除</button>
+  `;
+
+  document.getElementById("places").appendChild(div);
+}
+
+function getPlaces(){
+  let rows=document.querySelectorAll(".place");
+  let data=[];
+  rows.forEach(r=>{
+    let name=r.querySelector(".name").value;
+    let count=r.querySelector(".count").value;
+    let day=r.querySelector(".day").value;
+
+    if(name||count){
+      let text=name+" "+count+"枚";
+      if(day) text+="（"+day+"日目）";
+      data.push({text,count});
+    }
+  });
+  return data;
+}
+
+function calc(){
+  let data=getPlaces();
+  let total=0;
+  data.forEach(d=>total+=Number(d.count||0));
+
+  let finished=Number(document.getElementById("finished").value||0);
+
+  if(total && finished){
+    document.getElementById("per").innerText=Math.round(finished/total);
+  }
+}
+
+function makeSummary(){
+  let data=getPlaces();
+  let total=0;
+  let text="";
+
+  data.forEach(d=>{
+    total+=Number(d.count||0);
+    text+=d.text+"\\n";
+  });
+
+  document.getElementById("s_date").innerText=document.getElementById("date").value;
+  document.getElementById("s_places").innerText=text;
+  document.getElementById("s_total").innerText=total+"枚";
+  document.getElementById("s_finished").innerText=document.getElementById("finished").value+"枚";
+  document.getElementById("s_per").innerText=document.getElementById("per").innerText;
+  document.getElementById("s_memo").innerText=document.getElementById("memo").value;
+}
+
+// 初期値
+addPlace("鹿B",120,3);
+addPlace("鹿C",50,5);
+
+</script>
+
+</body>
 </html>
