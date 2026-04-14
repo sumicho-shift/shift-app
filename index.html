@@ -233,13 +233,11 @@
       </div>
 
       <label class="label" for="memo">備考</label>
-      <textarea id="memo" placeholder="例：
-半分だけ刈り
-気になったこと
-補足など"></textarea>
+      <textarea id="memo" placeholder="
+"></textarea>
 
       <button class="btn btn-main" type="button" id="summaryBtn">送信用にまとめる</button>
-      <div class="small">下のまとめをそのままスクショして送れるようにしてある。</div>
+      <div class="small">スクショして送る用</div>
     </div>
 
     <div class="card summary" id="summaryCard">
@@ -440,8 +438,7 @@
       workDate.addEventListener("input", makeSummary);
 
       workDate.value = todayString();
-      addPlaceRow("鹿B", "120", "3");
-      addPlaceRow("鹿C", "50", "5");
+      addPlaceRow("", "", "");
       makeSummary();
     })();
   </script>
