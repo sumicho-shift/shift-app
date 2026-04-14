@@ -1,161 +1,449 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>海苔データ入力フォーム</title>
-
-<style>
-body {
-  font-family: sans-serif;
-  background:#f5f7fb;
-  padding:15px;
-}
-.card{
-  background:#fff;
-  border-radius:15px;
-  padding:15px;
-  margin-bottom:15px;
-}
-input,textarea{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border-radius:10px;
-  border:1px solid #ccc;
-}
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
-  background:#4a7cff;
-  color:#fff;
-  font-size:16px;
-}
-.place{
-  border:1px solid #ddd;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:10px;
-}
-.summary{
-  border:2px solid #4a7cff;
-}
-</style>
-</head>
-
-<body>
-
-<div class="card">
-<h2>海苔データ入力</h2>
-
-<label>日付</label>
-<input type="date" id="date">
-
-<label>会社</label>
-<input value="住長" disabled>
-
-<h3>場所ごとの入力</h3>
-<div id="places"></div>
-
-<button onclick="addPlace()">場所追加</button>
-
-<label>出来上がり枚数</label>
-<input type="number" id="finished">
-
-<button onclick="calc()">自動計算</button>
-
-<div>1枚あたり：<span id="per">-</span></div>
-
-<label>備考</label>
-<textarea id="memo"></textarea>
-
-<button onclick="makeSummary()">まとめ作成</button>
-</div>
-
-<div class="card summary">
-<h2>送信用</h2>
-
-<div>日付：<span id="s_date"></span></div>
-<div>会社：住長</div>
-<div>場所内訳：<div id="s_places"></div></div>
-<div>合計：<span id="s_total"></span></div>
-<div>出来上がり：<span id="s_finished"></span></div>
-<div>1枚あたり：<span id="s_per"></span></div>
-<div>備考：<span id="s_memo"></span></div>
-
-</div>
-
-<script>
-
-function addPlace(name="",count="",day=""){
-  const div=document.createElement("div");
-  div.className="place";
-
-  div.innerHTML=`
-  <input class="name" placeholder="場所名" value="${name}">
-  <input class="count" type="number" placeholder="網枚数" value="${count}">
-  <input class="day" type="number" placeholder="何日目" value="${day}">
-  <button onclick="this.parentElement.remove()">削除</button>
-  `;
-
-  document.getElementById("places").appendChild(div);
-}
-
-function getPlaces(){
-  let rows=document.querySelectorAll(".place");
-  let data=[];
-  rows.forEach(r=>{
-    let name=r.querySelector(".name").value;
-    let count=r.querySelector(".count").value;
-    let day=r.querySelector(".day").value;
-
-    if(name||count){
-      let text=name+" "+count+"枚";
-      if(day) text+="（"+day+"日目）";
-      data.push({text,count});
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>海苔データ入力フォーム</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --line:#d8dfeb;
+      --text:#1f2a44;
+      --sub:#667085;
+      --blue-soft:#eaf1ff;
+      --danger:#b42318;
     }
-  });
-  return data;
-}
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+      line-height:1.5;
+    }
+    .wrap{
+      max-width:820px;
+      margin:0 auto;
+      padding:20px 16px 48px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:20px 16px;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:26px;
+      line-height:1.25;
+    }
+    .lead{
+      margin:0;
+      color:var(--sub);
+      font-size:15px;
+    }
+    .label{
+      display:block;
+      font-size:17px;
+      font-weight:800;
+      margin:18px 0 8px;
+    }
+    input, textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:15px 14px;
+      font-size:18px;
+      background:#fff;
+      color:var(--text);
+      outline:none;
+    }
+    textarea{
+      min-height:100px;
+      resize:vertical;
+    }
+    .fixed-box, .result-box{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:15px 14px;
+      background:#f8fafe;
+      font-size:18px;
+    }
+    .fixed-box strong{
+      font-size:20px;
+    }
+    .btn{
+      width:100%;
+      appearance:none;
+      border:none;
+      border-radius:18px;
+      padding:16px 14px;
+      font-size:21px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:14px;
+    }
+    .btn-main{
+      background:var(--blue-soft);
+      color:#173d91;
+    }
+    .btn-sub{
+      background:#eef2f7;
+      color:#344054;
+    }
+    .btn-danger{
+      background:#fff1f0;
+      color:var(--danger);
+    }
+    .btn:active{
+      transform:translateY(1px);
+    }
+    .small{
+      color:var(--sub);
+      font-size:14px;
+      margin-top:8px;
+    }
+    .result-box .big{
+      display:block;
+      font-size:36px;
+      font-weight:900;
+      line-height:1.1;
+      margin-top:4px;
+    }
+    .place-row{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:12px;
+      margin-bottom:12px;
+      background:#fbfcfe;
+    }
+    .place-grid{
+      display:grid;
+      grid-template-columns:1.2fr 1fr 1fr;
+      gap:10px;
+    }
+    .mini-label{
+      display:block;
+      font-size:14px;
+      color:var(--sub);
+      margin-bottom:6px;
+      font-weight:700;
+    }
+    .row-tools{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:10px;
+    }
+    .remove-btn{
+      appearance:none;
+      border:none;
+      background:transparent;
+      color:var(--danger);
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+      padding:8px 4px;
+    }
+    .summary{
+      border:2px solid #bfd0f9;
+      background:#fff;
+    }
+    .summary h2{
+      margin:0 0 14px;
+      font-size:24px;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin:10px 0;
+    }
+    .k{
+      flex:0 0 130px;
+      color:var(--sub);
+      font-weight:800;
+    }
+    .v{
+      flex:1;
+      font-size:20px;
+      font-weight:800;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .note{
+      color:var(--sub);
+      font-size:14px;
+      margin-top:12px;
+    }
+    @media (max-width: 560px){
+      .place-grid{
+        grid-template-columns:1fr;
+      }
+      .row{
+        flex-direction:column;
+        gap:4px;
+      }
+      .k{
+        flex:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>海苔データ入力フォーム</h1>
+      <p class="lead">
+        場所ごとに網枚数と何日目を入れられる版やで。<br>
+        送信用まとめはそのままスクショして送れるようにしてある。
+      </p>
+    </div>
 
-function calc(){
-  let data=getPlaces();
-  let total=0;
-  data.forEach(d=>total+=Number(d.count||0));
+    <div class="card">
+      <label class="label" for="workDate">日付</label>
+      <input id="workDate" type="date" />
 
-  let finished=Number(document.getElementById("finished").value||0);
+      <label class="label">会社</label>
+      <div class="fixed-box"><strong>住長</strong></div>
 
-  if(total && finished){
-    document.getElementById("per").innerText=Math.round(finished/total);
-  }
-}
+      <label class="label">場所ごとの入力</label>
+      <div id="places"></div>
+      <button class="btn btn-sub" type="button" id="addPlaceBtn">場所を追加</button>
+      <div class="small">例：鹿B 120枚 3日目 / 鹿C 50枚 5日目</div>
 
-function makeSummary(){
-  let data=getPlaces();
-  let total=0;
-  let text="";
+      <label class="label">合計網枚数</label>
+      <div class="result-box">
+        <div>自動集計</div>
+        <span class="big" id="totalNetsDisplay">0</span>
+      </div>
 
-  data.forEach(d=>{
-    total+=Number(d.count||0);
-    text+=d.text+"\\n";
-  });
+      <label class="label" for="finishedSheets">出来上がり枚数</label>
+      <input id="finishedSheets" type="number" inputmode="numeric" min="0" step="1" placeholder="例：320000" />
 
-  document.getElementById("s_date").innerText=document.getElementById("date").value;
-  document.getElementById("s_places").innerText=text;
-  document.getElementById("s_total").innerText=total+"枚";
-  document.getElementById("s_finished").innerText=document.getElementById("finished").value+"枚";
-  document.getElementById("s_per").innerText=document.getElementById("per").innerText;
-  document.getElementById("s_memo").innerText=document.getElementById("memo").value;
-}
+      <button class="btn btn-main" type="button" id="calcBtn">網1枚あたりを自動計算</button>
+      <div class="small" id="calcHint">場所ごとの網枚数と出来上がり枚数を入れてから押してな。</div>
 
-// 初期値
-addPlace("鹿B",120,3);
-addPlace("鹿C",50,5);
+      <label class="label">網1枚あたり出来高</label>
+      <div class="result-box">
+        <div>計算結果</div>
+        <span class="big" id="perNetDisplay">-</span>
+      </div>
 
-</script>
+      <label class="label" for="memo">備考</label>
+      <textarea id="memo" placeholder="例：
+半分だけ刈り
+気になったこと
+補足など"></textarea>
 
+      <button class="btn btn-main" type="button" id="summaryBtn">送信用にまとめる</button>
+      <div class="small">下のまとめをそのままスクショして送れるようにしてある。</div>
+    </div>
+
+    <div class="card summary" id="summaryCard">
+      <h2>送信用まとめ</h2>
+      <div class="row"><div class="k">日付</div><div class="v" id="sDate">-</div></div>
+      <div class="row"><div class="k">会社</div><div class="v">住長</div></div>
+      <div class="row"><div class="k">場所内訳</div><div class="v" id="sPlaces">-</div></div>
+      <div class="row"><div class="k">合計網枚数</div><div class="v" id="sTotal">-</div></div>
+      <div class="row"><div class="k">出来上がり</div><div class="v" id="sFinished">-</div></div>
+      <div class="row"><div class="k">1枚あたり</div><div class="v" id="sPerNet">-</div></div>
+      <div class="row"><div class="k">備考</div><div class="v" id="sMemo">-</div></div>
+      <div class="note">※ 共有機能がなくても、この画面をスクショしたら送れるで。</div>
+    </div>
+  </div>
+
+  <template id="placeRowTemplate">
+    <div class="place-row">
+      <div class="place-grid">
+        <div>
+          <label class="mini-label">場所名</label>
+          <input type="text" class="place-name" placeholder="例：鹿B" />
+        </div>
+        <div>
+          <label class="mini-label">網枚数</label>
+          <input type="number" class="place-count" inputmode="numeric" min="0" step="1" placeholder="例：120" />
+        </div>
+        <div>
+          <label class="mini-label">何日目</label>
+          <input type="number" class="place-day" inputmode="numeric" min="0" step="1" placeholder="例：3" />
+        </div>
+      </div>
+      <div class="row-tools">
+        <button type="button" class="remove-btn">この行を削除</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    (function(){
+      var placesEl = document.getElementById("places");
+      var addPlaceBtn = document.getElementById("addPlaceBtn");
+      var calcBtn = document.getElementById("calcBtn");
+      var summaryBtn = document.getElementById("summaryBtn");
+      var totalNetsDisplay = document.getElementById("totalNetsDisplay");
+      var perNetDisplay = document.getElementById("perNetDisplay");
+      var calcHint = document.getElementById("calcHint");
+      var finishedInput = document.getElementById("finishedSheets");
+      var memoInput = document.getElementById("memo");
+      var workDate = document.getElementById("workDate");
+      var template = document.getElementById("placeRowTemplate");
+
+      function todayString(){
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+
+      function jpDate(iso){
+        if(!iso) return "-";
+        var parts = iso.split("-");
+        if(parts.length !== 3) return iso;
+        return parts[0] + "/" + parts[1] + "/" + parts[2];
+      }
+
+      function toNum(v){
+        if(v === "" || v === null || v === undefined) return 0;
+        var n = Number(v);
+        return isFinite(n) ? n : 0;
+      }
+
+      function formatNumber(n){
+        return Number(n).toLocaleString("ja-JP");
+      }
+
+      function getRows(){
+        return Array.prototype.slice.call(document.querySelectorAll(".place-row"));
+      }
+
+      function addPlaceRow(name, count, day){
+        var fragment = template.content.cloneNode(true);
+        var row = fragment.querySelector(".place-row");
+        var nameInput = fragment.querySelector(".place-name");
+        var countInput = fragment.querySelector(".place-count");
+        var dayInput = fragment.querySelector(".place-day");
+        var removeBtn = fragment.querySelector(".remove-btn");
+
+        nameInput.value = name || "";
+        countInput.value = (count !== undefined && count !== null && count !== "") ? count : "";
+        dayInput.value = (day !== undefined && day !== null && day !== "") ? day : "";
+
+        nameInput.addEventListener("input", function(){
+          makeSummary();
+        });
+        countInput.addEventListener("input", function(){
+          updateTotal();
+          perNetDisplay.textContent = "-";
+          calcHint.textContent = "入力を変えたから、もう一回「自動計算」を押してな。";
+          makeSummary();
+        });
+        dayInput.addEventListener("input", function(){
+          makeSummary();
+        });
+        removeBtn.addEventListener("click", function(){
+          row.remove();
+          updateTotal();
+          perNetDisplay.textContent = "-";
+          calcHint.textContent = "行を削除したから、必要ならもう一回「自動計算」を押してな。";
+          makeSummary();
+        });
+
+        placesEl.appendChild(fragment);
+        updateTotal();
+        makeSummary();
+      }
+
+      function updateTotal(){
+        var total = 0;
+        getRows().forEach(function(row){
+          var count = row.querySelector(".place-count").value;
+          total += toNum(count);
+        });
+        totalNetsDisplay.textContent = formatNumber(total);
+        return total;
+      }
+
+      function collectPlaces(){
+        var lines = [];
+        getRows().forEach(function(row){
+          var name = row.querySelector(".place-name").value.trim();
+          var count = row.querySelector(".place-count").value.trim();
+          var day = row.querySelector(".place-day").value.trim();
+
+          if(name || count || day){
+            var left = name || "（場所名なし）";
+            var countText = count ? formatNumber(count) + "枚" : "枚数未入力";
+            var dayText = day ? "（" + day + "日目）" : "";
+            lines.push(left + " " + countText + dayText);
+          }
+        });
+        return lines;
+      }
+
+      function calcPerNet(){
+        var total = updateTotal();
+        var finished = toNum(finishedInput.value);
+
+        if(total <= 0){
+          perNetDisplay.textContent = "-";
+          calcHint.textContent = "場所ごとの網枚数を1枚以上入れてな。";
+          makeSummary();
+          return;
+        }
+
+        if(finished <= 0){
+          perNetDisplay.textContent = "-";
+          calcHint.textContent = "出来上がり枚数を入れてな。";
+          makeSummary();
+          return;
+        }
+
+        var per = finished / total;
+        perNetDisplay.textContent = formatNumber(Math.round(per));
+        calcHint.textContent = "計算できたで。";
+        makeSummary();
+      }
+
+      function makeSummary(){
+        var date = workDate.value;
+        var total = updateTotal();
+        var finished = finishedInput.value.trim();
+        var perNet = perNetDisplay.textContent;
+        var memo = memoInput.value.trim();
+        var placeLines = collectPlaces();
+
+        document.getElementById("sDate").textContent = date ? jpDate(date) : "-";
+        document.getElementById("sPlaces").innerHTML = placeLines.length ? placeLines.join("<br>") : "-";
+        document.getElementById("sTotal").textContent = total > 0 ? formatNumber(total) + "枚" : "-";
+        document.getElementById("sFinished").textContent = finished ? formatNumber(finished) + "枚" : "-";
+        document.getElementById("sPerNet").textContent = (perNet && perNet !== "-") ? perNet + "枚" : "-";
+        document.getElementById("sMemo").textContent = memo || "-";
+      }
+
+      addPlaceBtn.addEventListener("click", function(){
+        addPlaceRow("", "", "");
+      });
+      calcBtn.addEventListener("click", calcPerNet);
+      summaryBtn.addEventListener("click", makeSummary);
+
+      finishedInput.addEventListener("input", function(){
+        perNetDisplay.textContent = "-";
+        calcHint.textContent = "入力を変えたから、もう一回「自動計算」を押してな。";
+        makeSummary();
+      });
+
+      memoInput.addEventListener("input", makeSummary);
+      workDate.addEventListener("input", makeSummary);
+
+      workDate.value = todayString();
+      addPlaceRow("鹿B", "120", "3");
+      addPlaceRow("鹿C", "50", "5");
+      makeSummary();
+    })();
+  </script>
 </body>
 </html>
